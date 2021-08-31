@@ -1,0 +1,23 @@
+[package]
+name = "py-apify-macro"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+quote = "1.0.9"
+proc-macro2  = "1.0.28"
+pyo3 = "0.14.3"
+log = "0.4.14"
+env_logger = "0.9.0"
+syn = "1.0.75"
+uuid = {version = "0.8", features = ["v4"]}
+glob = "0.3.0"
+
+[lib]
+proc-macro = true
+
+[features]
+# dont check py file validity
+no-check = []

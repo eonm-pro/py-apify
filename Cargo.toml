@@ -1,0 +1,32 @@
+[package]
+name = "ner-api"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rocket = {version="0.5.0-rc.1", features = ["tls"]}
+pyo3 = "0.14.3"
+log = "0.4.14"
+env_logger = "0.9.0"
+py-apify-macro = {path = "./py-apify-macro", features=["no-check"]}
+
+[global.tls]
+certs = "./cert/cert.pem"
+key = "./cert/key.pem"
+prefer_server_cipher_order = false
+ciphers = [
+    "TLS_CHACHA20_POLY1305_SHA256",
+    "TLS_AES_256_GCM_SHA384",
+    "TLS_AES_128_GCM_SHA256",
+    "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256",
+    "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256",
+    "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
+    "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+    "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
+    "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
+]
+
+[profile.release]
+opt-level = 3

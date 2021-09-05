@@ -98,7 +98,7 @@ mod tests {
 
                 match nlp
                     .getattr("call")
-                    .expect(&format!("`call` function was not found in {}. Your python file must include a `call` function that returns json data:\n\ndef call(input):\n\tjson.dumps('{{'foo': 'bar'}}')\n\n", "test.py"))
+                    .expect(&format!("`call` function was not found in {}. Your python file must include a `call` function that returns json data:\n\ndef call(input):\n\tjson.dumps('{{'foo': 'bar'}}')\n\n", "test.pygit p"))
                     .call((), Some(kwargs)) {
                         Ok(result) => result.extract().unwrap_or("{}".to_string()),
                         Err(e) => format!("{{\"error\": \"{}\"}}", e.to_string())

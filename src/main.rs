@@ -10,5 +10,5 @@ use logger::setup_logger;
 #[launch]
 fn rocket() -> _ {
     setup_logger();
-    apify! {"src/*.py"}
+    apify! {}
 }

@@ -25,7 +25,7 @@ pub fn gen_error() -> TokenStream2 {
                 match self {
                     PyApifyError::HookFunctionNotFound(file_name) =>
                         write!(f, "Failed to call the `call` function inside your Python file {}. Your python file must contain a `call` function", file_name),
-                    PyApifyError::HookFunctionFailure(error_message) => 
+                    PyApifyError::HookFunctionFailure(error_message) =>
                         write!(f, "The hook function returned an error : {}", error_message),
                     PyApifyError::InvalidArguments =>
                         write!(f, "Invalid arguments")
@@ -51,7 +51,7 @@ pub fn gen_error() -> TokenStream2 {
                     Self::InvalidArguments => Status::BadRequest,
                     _ => Status::InternalServerError,
                 };
-                
+
                 Response::build()
                     .header(ContentType::JSON)
                     .status(status)

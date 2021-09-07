@@ -168,7 +168,5 @@ pub fn get_func_args(py_code: String, func_name: &str) -> Vec<PyArg> {
         });
     }
 
-    // println!("{:#?}", program);
-
     args
 }

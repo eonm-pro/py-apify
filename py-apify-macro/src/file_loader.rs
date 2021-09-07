@@ -15,7 +15,7 @@ impl<'a> From<&'a PythonFile> for PythonFileLoader {
                 std::fs::canonicalize(&python_file.path)
                     .unwrap()
                     .to_str()
-                    .unwrap()
+                    .unwrap(),
             ),
             module_name: Literal::string(&python_file.uuid),
             file_name: Literal::string(&python_file.file_name),

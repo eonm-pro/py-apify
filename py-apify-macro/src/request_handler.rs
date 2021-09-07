@@ -20,7 +20,8 @@ impl From<&PythonFile> for RouteAttribute {
 
 impl From<RouteAttribute> for TokenStream2 {
     fn from(route_attribute: RouteAttribute) -> Self {
-        let route_attribute = Literal::string(&format!("/{}?<query..>", route_attribute.route_name));
+        let route_attribute =
+            Literal::string(&format!("/{}?<query..>", route_attribute.route_name));
 
         quote! {
             #[get(#route_attribute)]

@@ -30,3 +30,9 @@ ciphers = [
 
 [profile.release]
 opt-level = 3
+
+[workspace]
+
+members = [
+    "py-apify-macro",
+]

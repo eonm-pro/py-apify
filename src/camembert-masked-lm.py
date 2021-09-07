@@ -11,9 +11,8 @@ from transformers import pipeline
 
 camembert_fill_mask  = pipeline("fill-mask", model="camembert/camembert-large", tokenizer="camembert/camembert-large", top_k = 10)
 
-
-def call(input):
-    entities = camembert_fill_mask(input)
+def call(input, top_k: int = 5):
+    entities = camembert_fill_mask(input, top_k = top_k)
     
     # converts digit to str (for json export)
     converted_entities = [{k: str(v) for (k,v) in i.items()} for i in entities]

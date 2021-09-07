@@ -23,7 +23,7 @@ use request_handler::RequestHandler;
 
 #[proc_macro]
 pub fn apify(item: TokenStream) -> TokenStream {
-    let error : TokenStream2 = error::gen_error().into();
+    let error = error::gen_error();
 
     let args: Vec<String> = Punctuated::<LitStr, Token![,]>::parse_terminated
         .parse(item)

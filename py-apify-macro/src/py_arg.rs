@@ -23,13 +23,13 @@ impl From<String> for PyPrimitiveDataType {
     }
 }
 
-impl Into<Ident> for PyPrimitiveDataType {
-    fn into(self) -> Ident {
-        match self {
-            Self::Str => Ident::new("String", Span::call_site()),
-            Self::Float => Ident::new("f64", Span::call_site()),
-            Self::Int => Ident::new("usize", Span::call_site()),
-            Self::Bool => Ident::new("bool", Span::call_site()),
+impl From<PyPrimitiveDataType> for Ident {
+    fn from(py_primitive_data_type: PyPrimitiveDataType) -> Self {
+        match py_primitive_data_type {
+            PyPrimitiveDataType::Str => Ident::new("String", Span::call_site()),
+            PyPrimitiveDataType::Float => Ident::new("f64", Span::call_site()),
+            PyPrimitiveDataType::Int => Ident::new("usize", Span::call_site()),
+            PyPrimitiveDataType::Bool => Ident::new("bool", Span::call_site()),
         }
     }
 }
@@ -41,18 +41,18 @@ pub struct PyArg {
     pub optional: bool,
 }
 
-impl Into<Ident> for PyArg {
-    fn into(self) -> Ident {
-        Ident::new(&self.name, Span::call_site())
+impl From<PyArg> for Ident {
+    fn from(py_arg: PyArg) -> Self {
+        Ident::new(&py_arg.name, Span::call_site())
     }
 }
 
-impl Into<TokenStream2> for PyArg {
-    fn into(self) -> TokenStream2 {
-        let struct_field_ident: Ident = self.clone().into();
-        let data_type_ident: Ident = self.data_type.into();
+impl From<PyArg> for TokenStream2 {
+    fn from(py_arg: PyArg) -> Self {
+        let struct_field_ident: Ident = py_arg.clone().into();
+        let data_type_ident: Ident = py_arg.data_type.into();
 
-        let data_type = if self.optional {
+        let data_type = if py_arg.optional {
             quote! {
                 Option<#data_type_ident>
             }
@@ -92,7 +92,7 @@ pub fn collect_func_args_default_values(
             &args
                 .kw_defaults
                 .iter()
-                .flat_map(|e| e)
+                .flatten()
                 .collect::<Vec<&Located<ExpressionType>>>(),
         );
 
@@ -113,11 +113,8 @@ pub fn collect_func_args(func: &Located<StatementType>) -> Vec<&Parameter> {
         func_args.extend(&args.args);
         func_args.extend(&args.kwonlyargs);
 
-        match &args.vararg {
-            Varargs::Named(param) => {
-                func_args.push(param);
-            }
-            _ => {}
+        if let Varargs::Named(param) = &args.vararg {
+            func_args.push(param);
         };
 
         func_args.sort_by(|a, b| {
@@ -160,16 +157,18 @@ pub fn get_func_args(py_code: String, func_name: &str) -> Vec<PyArg> {
         });
 
         let data_type: PyPrimitiveDataType = match data_type {
-            Some(d_type) => PyPrimitiveDataType::from(d_type),
+            Some(data_type) => PyPrimitiveDataType::from(data_type),
             None => PyPrimitiveDataType::Str,
         };
 
         args.push(PyArg {
             name: arg.arg.to_string(),
-            data_type: data_type,
+            data_type,
             optional: optional.is_some(),
         });
     }
+
+    // println!("{:#?}", program);
 
     args
 }

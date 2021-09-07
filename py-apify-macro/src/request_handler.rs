@@ -5,21 +5,22 @@ use quote::quote;
 
 use crate::form::FormIdent;
 
-pub struct RouteAttribute<'a> {
-    route_name: &'a str,
+#[derive(Clone)]
+pub struct RouteAttribute {
+    route_name: String,
 }
 
-impl<'a> From<&'a PythonFile> for RouteAttribute<'a> {
-    fn from(python_file: &'a PythonFile) -> RouteAttribute<'a> {
+impl From<&PythonFile> for RouteAttribute {
+    fn from(python_file: &PythonFile) -> RouteAttribute {
         RouteAttribute {
-            route_name: &python_file.file_stem,
+            route_name: python_file.file_stem.clone(),
         }
     }
 }
 
-impl<'a> Into<TokenStream2> for RouteAttribute<'a> {
-    fn into(self) -> TokenStream2 {
-        let route_attribute = Literal::string(&format!("/{}?<query..>", self.route_name));
+impl From<RouteAttribute> for TokenStream2 {
+    fn from(route_attribute: RouteAttribute) -> Self {
+        let route_attribute = Literal::string(&format!("/{}?<query..>", route_attribute.route_name));
 
         quote! {
             #[get(#route_attribute)]
@@ -27,6 +28,13 @@ impl<'a> Into<TokenStream2> for RouteAttribute<'a> {
     }
 }
 
+impl From<RouteAttribute> for Literal {
+    fn from(route_attribute: RouteAttribute) -> Self {
+        Literal::string(&format!("/{}", route_attribute.route_name))
+    }
+}
+
+#[derive(Clone)]
 pub struct RequestHandlerIdent {
     ident: Ident,
 }
@@ -39,44 +47,44 @@ impl From<&PythonFile> for RequestHandlerIdent {
     }
 }
 
-impl Into<Ident> for RequestHandlerIdent {
-    fn into(self) -> Ident {
-        self.ident
+impl From<RequestHandlerIdent> for Ident {
+    fn from(request_handler: RequestHandlerIdent) -> Self {
+        request_handler.ident
     }
 }
 
-pub struct RequestHandler<'a> {
+pub struct RequestHandler {
     ident: RequestHandlerIdent,
-    route_attribute: RouteAttribute<'a>,
+    route_attribute: RouteAttribute,
     hook_function_ident: HookFunctionIdent,
     form_ident: FormIdent,
 }
 
-impl<'a> From<&'a PythonFile> for RequestHandler<'a> {
-    fn from(python_file: &'a PythonFile) -> RequestHandler<'a> {
+impl From<&PythonFile> for RequestHandler {
+    fn from(python_file: &PythonFile) -> RequestHandler {
         RequestHandler {
             ident: python_file.into(),
             route_attribute: RouteAttribute::from(python_file),
             hook_function_ident: python_file.into(),
-            form_ident: FormIdent::from(python_file).into(),
+            form_ident: FormIdent::from(python_file),
         }
     }
 }
 
-impl<'a> Into<TokenStream2> for RequestHandler<'a> {
-    fn into(self) -> TokenStream2 {
-        let route_attribute: TokenStream2 = self.route_attribute.into();
-        let route_ident: Ident = self.ident.into();
-        let hook_function_ident: Ident = self.hook_function_ident.into();
-        let form_ident: Ident = self.form_ident.into();
+impl From<RequestHandler> for TokenStream2 {
+    fn from(request_handler: RequestHandler) -> Self {
+        let route_attribute: TokenStream2 = request_handler.route_attribute.into();
+        let route_ident: Ident = request_handler.ident.into();
+        let hook_function_ident: Ident = request_handler.hook_function_ident.into();
+        let form_ident: Ident = request_handler.form_ident.into();
 
         quote! {
             #route_attribute
-            fn #route_ident(query: #form_ident) -> rocket::response::content::Json<String> {
-                return rocket::response::content::Json(format!(
+            fn #route_ident(query: rocket::form::Strict<#form_ident>) -> Result<rocket::response::content::Json<String>, PyApifyError> {
+                Ok(rocket::response::content::Json(format!(
                     "{}",
-                    #hook_function_ident(pyo3::Python::acquire_gil().python(), query)
-                ));
+                    #hook_function_ident(pyo3::Python::acquire_gil().python(), query.into_inner())?
+                )))
             }
         }
     }

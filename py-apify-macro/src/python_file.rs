@@ -49,15 +49,8 @@ pub fn get_py_files(input: Vec<String>) -> Vec<PythonFile> {
     files_name.sort();
     files_name.dedup();
 
-    let python_files = files_name
+    files_name
         .into_iter()
-        .map(|elem| PythonFile::new(elem))
-        .collect::<Vec<PythonFile>>();
-
-    #[cfg(not(feature = "no-check"))]
-    {
-        // python_files.iter().for_each(|file| file.check());
-    }
-
-    return python_files;
+        .map(PythonFile::new)
+        .collect::<Vec<PythonFile>>()
 }

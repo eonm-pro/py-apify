@@ -16,9 +16,9 @@ impl From<&PythonFile> for FormIdent {
     }
 }
 
-impl Into<Ident> for FormIdent {
-    fn into(self) -> Ident {
-        self.ident
+impl From<FormIdent> for Ident {
+    fn from(form_ident: FormIdent) -> Self {
+        form_ident.ident
     }
 }
 
@@ -36,17 +36,17 @@ impl From<&PythonFile> for Form {
     }
 }
 
-impl Into<TokenStream2> for Form {
-    fn into(self) -> TokenStream2 {
-        let form_ident: Ident = self.ident.into();
-        let struct_fields: Vec<TokenStream2> = self
+impl From<Form> for TokenStream2 {
+    fn from(form: Form) -> Self {
+        let form_ident: Ident = form.ident.into();
+        let struct_fields: Vec<TokenStream2> = form
             .variants
             .clone()
             .into_iter()
             .map(|variant| variant.into())
             .collect();
 
-        let struct_fields_names: Vec<TokenStream2> = self
+        let struct_fields_names: Vec<TokenStream2> = form
             .variants
             .iter()
             .map(|variant| {
@@ -57,7 +57,7 @@ impl Into<TokenStream2> for Form {
             })
             .collect();
 
-        let struct_fields_values: Vec<TokenStream2> = self
+        let struct_fields_values: Vec<TokenStream2> = form
             .variants
             .into_iter()
             .map(|field| {

@@ -1,30 +1,41 @@
 use crate::python_file::PythonFile;
-use crate::request_handler::RequestHandlerIdent;
-use proc_macro2::{Ident, TokenStream as TokenStream2};
+use crate::request_handler::{RequestHandlerIdent, RouteAttribute};
+use proc_macro2::{Ident, Literal, TokenStream as TokenStream2};
 use quote::quote;
 
+#[derive(Clone)]
 pub struct RocketMount {
     routes: Vec<RequestHandlerIdent>,
+    literal_route: Vec<RouteAttribute>,
 }
 
 impl From<&Vec<PythonFile>> for RocketMount {
     fn from(python_files: &Vec<PythonFile>) -> RocketMount {
         RocketMount {
             routes: python_files.iter().map(|file| file.into()).collect(),
+            literal_route: python_files.iter().map(|file| file.into()).collect(),
         }
     }
 }
 
-impl Into<TokenStream2> for RocketMount {
-    fn into(self) -> TokenStream2 {
-        let idents = self
+impl From<RocketMount> for TokenStream2 {
+    fn from(rocket_mount: RocketMount) -> Self {
+        let idents = rocket_mount
             .routes
+            .clone()
             .into_iter()
             .map(|e| e.into())
             .collect::<Vec<Ident>>();
 
+        let literals = rocket_mount
+            .literal_route
+            .into_iter()
+            .map(|e| e.into())
+            .collect::<Vec<Literal>>();
+
         quote! {
             rocket::build().mount("/", routes![#(#idents),*])
+                #(.register(#literals, catchers![invalid_argument]))*
         }
     }
 }

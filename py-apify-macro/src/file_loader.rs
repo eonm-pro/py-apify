@@ -11,24 +11,23 @@ pub struct PythonFileLoader {
 impl<'a> From<&'a PythonFile> for PythonFileLoader {
     fn from(python_file: &'a PythonFile) -> PythonFileLoader {
         PythonFileLoader {
-            module_path: Literal::string(&format!(
-                "{}",
+            module_path: Literal::string(
                 std::fs::canonicalize(&python_file.path)
                     .unwrap()
                     .to_str()
                     .unwrap()
-            )),
+            ),
             module_name: Literal::string(&python_file.uuid),
             file_name: Literal::string(&python_file.file_name),
         }
     }
 }
 
-impl Into<TokenStream2> for PythonFileLoader {
-    fn into(self) -> TokenStream2 {
-        let file_name: Literal = self.file_name;
-        let module_name: Literal = self.module_name;
-        let module_path: Literal = self.module_path;
+impl From<PythonFileLoader> for TokenStream2 {
+    fn from(python_file_loader: PythonFileLoader) -> Self {
+        let file_name: Literal = python_file_loader.file_name;
+        let module_name: Literal = python_file_loader.module_name;
+        let module_path: Literal = python_file_loader.module_path;
 
         quote! {
             pyo3::types::PyModule::from_code(

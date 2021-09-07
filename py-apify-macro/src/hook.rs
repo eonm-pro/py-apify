@@ -16,9 +16,9 @@ impl From<&PythonFile> for HookFunctionIdent {
     }
 }
 
-impl Into<Ident> for HookFunctionIdent {
-    fn into(self) -> Ident {
-        self.ident
+impl From<HookFunctionIdent> for Ident {
+    fn from(hook_function_ident: HookFunctionIdent) -> Self {
+        hook_function_ident.ident
     }
 }
 
@@ -40,15 +40,15 @@ impl From<&PythonFile> for Hook {
     }
 }
 
-impl Into<TokenStream2> for Hook {
-    fn into(self) -> TokenStream2 {
-        let hook_function_ident: Ident = self.ident.into();
-        let module_name = self.py_module_name;
-        let file_name = self.py_file_name;
-        let form_ident: Ident = self.form_ident.into();
+impl From<Hook> for TokenStream2 {
+    fn from(hook: Hook) -> Self {
+        let hook_function_ident: Ident = hook.ident.into();
+        let module_name = hook.py_module_name;
+        let file_name = hook.py_file_name;
+        let form_ident: Ident = hook.form_ident.into();
 
         quote! {
-            fn #hook_function_ident(py_lock: pyo3::Python, input: #form_ident) -> String {
+            fn #hook_function_ident(py_lock: pyo3::Python, input: #form_ident) -> Result<String, PyApifyError> {
                 let kwargs : &pyo3::types::PyDict = input.kwargs(py_lock);
 
                 let nlp = pyo3::types::PyModule::import(
@@ -58,11 +58,10 @@ impl Into<TokenStream2> for Hook {
                 .expect("failed to import PyModule");
 
                 match nlp
-                    .getattr("call")
-                    .expect(&format!("`call` function was not found in {}. Your python file must include a `call` function that returns json data:\n\ndef call(input):\n\tjson.dumps('{{'foo': 'bar'}}')\n\n", #file_name))
+                    .getattr("call").map_err(|_e| PyApifyError::HookFunctionNotFound(#file_name.to_string()))?
                     .call((), Some(kwargs)) {
-                        Ok(result) => result.extract().unwrap_or("{}".to_string()),
-                        Err(e) => format!("{{\"error\": \"{}\"}}", e.to_string())
+                        Ok(result) => Ok(result.extract().unwrap_or("{}".to_string())),
+                        Err(e) => Err(PyApifyError::HookFunctionFailure(e.to_string()))
                 }
             }
         }
@@ -98,7 +97,7 @@ mod tests {
 
                 match nlp
                     .getattr("call")
-                    .expect(&format!("`call` function was not found in {}. Your python file must include a `call` function that returns json data:\n\ndef call(input):\n\tjson.dumps('{{'foo': 'bar'}}')\n\n", "test.pygit p"))
+                    .expect(&format!("`call` function was not found in {}. Your python file must include a `call` function that returns json data:\n\ndef call(input):\n\tjson.dumps('{{'foo': 'bar'}}')\n\n", "test.py"))
                     .call((), Some(kwargs)) {
                         Ok(result) => result.extract().unwrap_or("{}".to_string()),
                         Err(e) => format!("{{\"error\": \"{}\"}}", e.to_string())

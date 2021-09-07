@@ -6,6 +6,7 @@ use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 use syn::{parse::Parser, punctuated::Punctuated, LitStr, Token};
 
+mod error;
 mod file_loader;
 mod form;
 mod hook;
@@ -22,6 +23,8 @@ use request_handler::RequestHandler;
 
 #[proc_macro]
 pub fn apify(item: TokenStream) -> TokenStream {
+    let error : TokenStream2 = error::gen_error().into();
+
     let args: Vec<String> = Punctuated::<LitStr, Token![,]>::parse_terminated
         .parse(item)
         .expect("invalid arguments")
@@ -54,6 +57,8 @@ pub fn apify(item: TokenStream) -> TokenStream {
         .collect();
 
     return quote! {
+        #error
+        use rocket::form::{Form, Strict};
         use pyo3::prelude::*;
 
         pyo3::prepare_freethreaded_python();
